@@ -1247,7 +1247,7 @@
   <!-- CREDITS -->
   <div class="credits" id="credits">
     <div class="creditsTop">
-      <div class="tag">Cinematic mode</div>
+      <div class="tag">Ti amo</div>
       <button id="exitCreditsBtn" type="button">Esci ✕</button>
     </div>
     <div class="creditsRoll" id="creditsRoll">
@@ -1656,6 +1656,7 @@
       a.download = "san-valentino.ics";
       a.click();
     });
+
     $("#copyReminderBtn").addEventListener("click", async () => {
       const txt = `💗 San Valentino\n📅 ${dateShort} ${target.getFullYear()}\n⏰ 20:30\n👗 Elegante\n📍 Segreta\nFirmato: ${fromName}`;
       try {
@@ -1663,7 +1664,6 @@
         showToast("Promemoria copiato ✅");
       } catch { showToast("Copia non disponibile 😅"); }
     });
-
   })();
   </script>
 </body>
