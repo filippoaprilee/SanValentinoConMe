@@ -2,10 +2,10 @@
 <html lang="it">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Invito 💗</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#12070b" />
+  <title>Invito 💚</title>
 
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 
   <style>
@@ -17,7 +17,12 @@
       --rose2:#ff6b8a;
       --pink:#ffb3c6;
 
-      --glass: rgba(255,255,255,.74);
+      /* cuore verde "nostro" */
+      --g1:#2EE59D;
+      --g2:#16C57E;
+      --g3:#0FA56A;
+
+      --glass: rgba(255,255,255,.76);
       --glass2: rgba(255,255,255,.54);
       --stroke: rgba(255,255,255,.42);
 
@@ -28,17 +33,21 @@
       --maxw: 920px;
 
       --line: rgba(255,255,255,.55);
-      --line2: rgba(255,255,255,.30);
+      --line2: rgba(255,255,255,.26);
+
+      --prog: 0; /* 0..1 per glow linea */
     }
 
     *{ box-sizing:border-box; margin:0; padding:0; }
     html,body{ height:100%; }
-
     body{
-      font-family:"Poppins",system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", system-ui, "Segoe UI", Roboto, Arial, sans-serif;
       color: var(--ink);
       overflow:hidden;
       background: linear-gradient(135deg, #ff7a8a, #ffd1dc, #f6b2ff, #7f5cff);
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
+      overscroll-behavior: none;
     }
 
     /* ===== Video background ===== */
@@ -53,8 +62,10 @@
       width:100%; height:100%;
       object-fit:cover;
       filter:saturate(1.05) contrast(1.05) brightness(.92);
-      transform:scale(1.02);
+      transform:scale(1.03);
       opacity:.42;
+      transition: transform 2.6s cubic-bezier(.2,.8,.2,1), filter 2.6s ease, opacity 2.6s ease;
+      will-change: transform, filter, opacity;
     }
     .bg::after{
       content:"";
@@ -62,9 +73,21 @@
       background:
         radial-gradient(900px 520px at 18% 20%, rgba(255,47,90,.26), transparent 60%),
         radial-gradient(900px 520px at 80% 30%, rgba(255,179,198,.18), transparent 60%),
-        linear-gradient(to bottom, rgba(10,5,8,.62), rgba(10,5,8,.20), rgba(10,5,8,.72));
+        linear-gradient(to bottom, rgba(10,5,8,.64), rgba(10,5,8,.20), rgba(10,5,8,.76));
       z-index:1;
       pointer-events:none;
+      transition: filter 2.6s ease, opacity 2.6s ease;
+    }
+
+    /* ===== Dolly (quando arriva l'ultima card) ===== */
+    body.dolly .bg video{
+      transform: scale(1.15) translate3d(1.4%, -2.2%, 0);
+      filter: saturate(1.18) contrast(1.12) brightness(.88);
+      opacity:.50;
+    }
+    body.dolly .bg::after{
+      filter: saturate(1.1);
+      opacity: 1;
     }
 
     /* ===== Grain ===== */
@@ -147,7 +170,7 @@
     .navBtn:hover{ transform: translateY(-2px); background: rgba(255,255,255,.18); }
     .navBtn:active{ transform: scale(.98); }
 
-    /* ===== Intro (heart only) ===== */
+    /* ===== Intro (cuore verde + animazione lenta) ===== */
     .intro{
       position:fixed; inset:0;
       z-index:30;
@@ -155,16 +178,16 @@
       place-items:center;
       padding: 18px;
       background: radial-gradient(900px 600px at 50% 35%, rgba(255,255,255,.14), transparent 60%),
-                  rgba(10,5,8,.42);
-      backdrop-filter: blur(6px);
-      transition: .6s ease;
+                  rgba(10,5,8,.44);
+      backdrop-filter: blur(7px);
+      transition: .7s ease;
+      height: 100svh;
     }
     .intro.hide{
       opacity:0;
       transform: scale(1.02);
       pointer-events:none;
     }
-
     .introInner{
       width:min(680px, 100%);
       display:flex;
@@ -173,14 +196,69 @@
       gap: 14px;
       text-align:center;
       color: rgba(255,255,255,.92);
+      position:relative;
+    }
+    .introSmall{
+      font-size: 12px;
+      opacity:.86;
+      letter-spacing:.14em;
+      text-transform: uppercase;
+    }
+    .introTitle{
+      font-weight: 800;
+      font-size: clamp(24px, 3.4vw, 42px);
+      line-height:1.08;
+      letter-spacing: -0.02em;
+      text-shadow: 0 20px 60px rgba(0,0,0,.35);
+    }
+    .introHint{
+      font-size: 13.5px;
+      opacity:.86;
+      line-height:1.7;
+      max-width: 58ch;
+    }
+
+    .heartWrap{
+      position:relative;
+      width: 118px;
+      height: 118px;
+      display:grid;
+      place-items:center;
+    }
+
+    /* cuore "sotto" che appare e si anima */
+    .underHeart{
+      position:absolute;
+      inset:0;
+      display:grid;
+      place-items:center;
+      pointer-events:none;
+      opacity:0;
+    }
+    .underHeart svg{
+      width: 120px; height:auto;
+      transform: translateY(10px) scale(.55);
+      filter: drop-shadow(0 18px 36px rgba(0,0,0,.35));
+    }
+    .intro.play .underHeart{
+      opacity:1;
+    }
+    .intro.play .underHeart svg{
+      animation: underHeart 1.55s cubic-bezier(.2,.8,.2,1) forwards;
+    }
+    @keyframes underHeart{
+      0%{ opacity:0; transform: translateY(10px) scale(.55); }
+      25%{ opacity:.95; }
+      100%{ opacity:0; transform: translateY(34px) scale(1.65); }
     }
 
     .heartBtn{
-      width: 104px; height: 104px;
+      width: 110px; height: 110px;
       border-radius: 999px;
-      border: 1px solid rgba(255,255,255,.38);
-      background: radial-gradient(circle at 30% 25%, rgba(255,255,255,.40), rgba(255,255,255,.10) 48%, rgba(255,255,255,.06));
-      box-shadow: 0 30px 90px rgba(0,0,0,.35);
+      border: 1px solid rgba(255,255,255,.36);
+      background:
+        radial-gradient(circle at 30% 25%, rgba(255,255,255,.36), rgba(255,255,255,.08) 48%, rgba(255,255,255,.05));
+      box-shadow: 0 32px 96px rgba(0,0,0,.36);
       cursor:pointer;
       display:grid;
       place-items:center;
@@ -188,54 +266,102 @@
       transition: .22s ease;
       position:relative;
       overflow:hidden;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
     }
     .heartBtn:hover{ transform: translateY(-3px) scale(1.02); }
     .heartBtn:active{ transform: scale(.98); }
 
+    /* glow verde */
     .heartBtn::before{
       content:"";
       position:absolute; inset:-2px;
-      background: conic-gradient(from 180deg, rgba(255,47,90,.55), rgba(255,179,198,.25), rgba(246,178,255,.25), rgba(255,47,90,.55));
+      background: conic-gradient(from 180deg,
+        rgba(46,229,157,.55),
+        rgba(22,197,126,.22),
+        rgba(255,47,90,.18),
+        rgba(46,229,157,.55)
+      );
       filter: blur(16px);
-      opacity:.65;
+      opacity:.78;
       z-index:0;
     }
-    .heartBtn span{
+
+    .heartIcon{
       position:relative; z-index:1;
-      font-size: 42px;
-      filter: drop-shadow(0 10px 18px rgba(0,0,0,.22));
-      animation: pulse 1.2s ease-in-out infinite;
+      width: 46px; height: 46px;
+      filter: drop-shadow(0 14px 22px rgba(0,0,0,.28));
+      animation: pulse 1.25s ease-in-out infinite;
     }
     @keyframes pulse{
       0%,100%{ transform: scale(1); }
       50%{ transform: scale(1.08); }
     }
 
-    .introSmall{
-      font-size: 12.5px;
-      opacity:.86;
-      letter-spacing:.12em;
-      text-transform: uppercase;
+    /* disegno del cuore grande + bloom */
+    .introFx{
+      position:absolute;
+      inset:-20px;
+      pointer-events:none;
+      display:grid;
+      place-items:center;
+      opacity:0;
+      transform: translateY(8px) scale(.92);
     }
-    .introTitle{
-      font-family:"Playfair Display",serif;
-      font-size: clamp(26px, 3.4vw, 44px);
-      line-height:1.08;
-      letter-spacing:.2px;
-      text-shadow: 0 20px 60px rgba(0,0,0,.35);
+    .introFx svg{
+      width: min(520px, 88vw);
+      height:auto;
+      filter: drop-shadow(0 24px 90px rgba(46,229,157,.22));
     }
-    .introHint{
-      font-size: 13.5px;
-      opacity:.86;
-      line-height:1.7;
-      max-width: 55ch;
+    .bigFill{
+      fill: rgba(46,229,157,.12);
+      opacity:0;
+      transform-origin: 50% 55%;
+    }
+    .bigStroke{
+      fill: none;
+      stroke: rgba(46,229,157,.92);
+      stroke-width: 2.6;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      stroke-dasharray: 520;
+      stroke-dashoffset: 520;
+      opacity:.0;
+    }
+
+    .intro.play .introFx{
+      opacity:1;
+      animation: fxIn 1.8s cubic-bezier(.2,.8,.2,1) forwards;
+    }
+    .intro.play .bigStroke{
+      opacity:1;
+      animation: drawHeart 1.35s cubic-bezier(.2,.8,.2,1) forwards;
+    }
+    .intro.play .bigFill{
+      animation: fillBloom 1.65s cubic-bezier(.2,.8,.2,1) forwards;
+    }
+
+    @keyframes fxIn{
+      0%{ opacity:0; transform: translateY(8px) scale(.92); }
+      35%{ opacity:1; transform: translateY(0) scale(1); }
+      100%{ opacity:0; transform: translateY(22px) scale(1.18); }
+    }
+    @keyframes drawHeart{
+      0%{ stroke-dashoffset: 520; opacity:0; }
+      12%{ opacity:1; }
+      100%{ stroke-dashoffset: 0; opacity:.0; }
+    }
+    @keyframes fillBloom{
+      0%{ opacity:0; transform: scale(.92); }
+      35%{ opacity:.9; transform: scale(1.03); }
+      100%{ opacity:0; transform: scale(1.20); }
     }
 
     /* ===== Stage ===== */
     main{
       position:relative;
       z-index:1;
-      height:100vh;
+      height: 100svh;
       overflow:hidden;
       display:grid;
       place-items:center;
@@ -253,7 +379,7 @@
 
     .shell{
       width:min(var(--maxw), 100%);
-      height: min(78vh, 720px);
+      height: min(78svh, 720px);
       display:flex;
       flex-direction:column;
       gap: 12px;
@@ -279,7 +405,7 @@
     }
     .panel > *{ position:relative; z-index:1; }
 
-    /* ===== Top progress ===== */
+    /* ===== Top progress dots ===== */
     .progressBar{
       display:flex;
       gap: 8px;
@@ -301,7 +427,7 @@
       border-color: rgba(255,255,255,.75);
     }
 
-    /* ===== Cards list (non-scroll, but we animate) ===== */
+    /* ===== Cards list ===== */
     .cardsWrap{
       flex:1;
       padding: 16px 18px 18px;
@@ -309,6 +435,7 @@
       display:flex;
       align-items:stretch;
       justify-content:center;
+      touch-action: pan-y;
     }
 
     .cards{
@@ -320,9 +447,10 @@
       gap: 12px;
       justify-content:flex-start;
       overflow:hidden;
+      --prog: 0; /* 0..1 */
     }
 
-    /* vertical line */
+    /* line base */
     .cards::before{
       content:"";
       position:absolute;
@@ -333,6 +461,30 @@
       background: linear-gradient(to bottom, var(--line), var(--line2));
       border-radius: 2px;
       opacity:.95;
+    }
+
+    /* line glow progress */
+    .cards::after{
+      content:"";
+      position:absolute;
+      left:22px;
+      top:6px;
+      height: calc(100% - 12px);
+      width:2px;
+      border-radius: 2px;
+      transform-origin: top;
+      transform: scaleY(var(--prog));
+      background: linear-gradient(to bottom,
+        rgba(46,229,157,.95),
+        rgba(255,47,90,.92),
+        rgba(255,255,255,0)
+      );
+      box-shadow:
+        0 0 18px rgba(46,229,157,.32),
+        0 0 26px rgba(255,47,90,.18);
+      transition: transform .55s cubic-bezier(.2,.8,.2,1);
+      opacity:.98;
+      pointer-events:none;
     }
 
     .card{
@@ -366,7 +518,15 @@
       border: 2px solid rgba(255,255,255,.82);
     }
 
-    /* connector arrow to next (only visually when next exists & current shown) */
+    /* dot active glow (card corrente) */
+    .card.active::before{
+      background: linear-gradient(135deg, var(--g1), var(--g2));
+      box-shadow:
+        0 0 18px rgba(46,229,157,.34),
+        0 16px 32px rgba(0,0,0,.14);
+      border-color: rgba(255,255,255,.92);
+    }
+
     .card.hasNext::after{
       content:"";
       position:absolute;
@@ -402,10 +562,11 @@
 
     .cTitle{
       margin-top: 10px;
-      font-family:"Playfair Display",serif;
+      font-weight: 850;
       font-size: 22px;
       color: rgba(43,11,20,.96);
       line-height: 1.18;
+      letter-spacing: -0.02em;
     }
     .cText{
       margin-top: 8px;
@@ -478,7 +639,7 @@
     .miniHint{
       font-size: 12.5px;
       color: rgba(255,255,255,.88);
-      opacity:.86;
+      opacity:.88;
       text-shadow: 0 18px 40px rgba(0,0,0,.26);
       user-select:none;
     }
@@ -498,6 +659,8 @@
       display:inline-flex;
       align-items:center;
       gap: 10px;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
     }
     .nextBtn:hover{ transform: translateY(-2px); box-shadow: 0 30px 64px rgba(255,47,90,.34); }
     .nextBtn:active{ transform: scale(.98); }
@@ -512,11 +675,8 @@
       box-shadow: 0 14px 28px rgba(0,0,0,.12);
     }
 
-    /* ===== Final card (photo + question) ===== */
-    .finalCard{
-      padding: 0;
-      overflow:hidden;
-    }
+    /* ===== Final card ===== */
+    .finalCard{ padding: 0; overflow:hidden; }
     .finalTop{
       position:relative;
       min-height: 320px;
@@ -535,7 +695,7 @@
       position:absolute; inset:0;
       background:
         radial-gradient(900px 520px at 18% 20%, rgba(255,47,90,.26), transparent 55%),
-        linear-gradient(to top, rgba(43,11,20,.72), rgba(43,11,20,.20), rgba(43,11,20,.82));
+        linear-gradient(to top, rgba(43,11,20,.74), rgba(43,11,20,.20), rgba(43,11,20,.84));
       pointer-events:none;
     }
     .finalCaption{
@@ -552,15 +712,9 @@
       font-size: 13.5px;
       z-index:2;
     }
-    .finalBody{
-      padding: 16px 16px 16px;
-    }
+    .finalBody{ padding: 16px 16px 16px; }
 
-    .qDetails{
-      margin-top: 10px;
-      display:grid;
-      gap: 10px;
-    }
+    .qDetails{ margin-top: 10px; display:grid; gap: 10px; }
     .qBox{
       border-radius: 18px;
       background: rgba(255,255,255,.56);
@@ -576,10 +730,11 @@
       margin-bottom: 6px;
     }
     .qBox .v{
-      font-family:"Playfair Display",serif;
+      font-weight: 850;
       font-size: 18px;
       color: rgba(43,11,20,.96);
       line-height:1.2;
+      letter-spacing:-0.02em;
     }
     .qBox .d{
       margin-top: 6px;
@@ -605,6 +760,8 @@
       font-size: 14px;
       position:absolute;
       top: 0;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
     }
     .btnYes{
       left:0;
@@ -667,10 +824,11 @@
     .modalInner{ position:relative; z-index:1; padding: 24px; }
 
     .modalTitle{
-      font-family:"Playfair Display",serif;
-      font-size: clamp(26px, 3vw, 38px);
+      font-weight: 900;
+      font-size: clamp(24px, 3vw, 36px);
       line-height:1.12;
       color: rgba(43,11,20,.96);
+      letter-spacing:-0.02em;
     }
     .modalDesc{
       margin-top: 10px;
@@ -711,6 +869,8 @@
       box-shadow: 0 18px 40px rgba(0,0,0,.12);
       color: rgba(43,11,20,.88);
       font-size: 13px;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
     }
     .btnSmall:hover{ transform: translateY(-2px); }
     .btnSmall.primary{
@@ -731,7 +891,6 @@
       overflow:hidden;
     }
     .credits.show{ display:block; }
-
     .creditsTop{
       position:absolute;
       top: 14px; left: 14px; right: 14px;
@@ -758,6 +917,8 @@
       color: rgba(255,255,255,.92);
       backdrop-filter: blur(10px);
       transition:.2s ease;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
     }
     .creditsTop button:hover{ transform: translateY(-2px); background: rgba(255,255,255,.16); }
 
@@ -776,10 +937,10 @@
       to{ transform: translateX(-50%) translateY(-220vh); }
     }
     .creditsRoll h3{
-      font-family:"Playfair Display",serif;
-      font-size: clamp(28px, 3.6vw, 44px);
+      font-weight: 950;
+      font-size: clamp(26px, 3.6vw, 42px);
       margin-bottom: 12px;
-      letter-spacing:.2px;
+      letter-spacing: -.02em;
     }
     .creditsRoll p{
       font-size: 14px;
@@ -802,15 +963,17 @@
       margin-top: 18px;
     }
     .creditsRoll .name{
-      font-family:"Playfair Display",serif;
+      font-weight: 900;
       font-size: 20px;
       margin-top: 6px;
+      letter-spacing:-0.02em;
     }
     .creditsRoll .finalWord{
       margin-top: 26px;
-      font-family:"Playfair Display",serif;
+      font-weight: 900;
       font-size: 22px;
       opacity:.95;
+      letter-spacing:-0.02em;
     }
 
     /* ===== Toast ===== */
@@ -838,24 +1001,27 @@
       position: fixed;
       bottom: -30px;
       pointer-events:none;
-      opacity:.60;
+      opacity:.58;
       filter: drop-shadow(0 10px 16px rgba(0,0,0,.14));
       animation: floatUp linear forwards;
       z-index: 0;
     }
     @keyframes floatUp{
-      from{ transform: translateY(0) scale(.95); opacity:.60; }
+      from{ transform: translateY(0) scale(.95); opacity:.58; }
       to{ transform: translateY(-120vh) scale(1.45); opacity:0; }
     }
 
     /* ===== Responsive ===== */
     @media (max-width: 520px){
+      header{ padding: 14px 12px; }
       main{ padding: 84px 12px 18px; }
       .cardsWrap{ padding: 14px 14px 14px; }
       .cards{ padding-left: 42px; }
       .btnNo{ left: 150px; }
       .introTitle{ font-size: 30px; }
+      .navBtn{ font-size:12.5px; padding: 9px 12px; }
     }
+
     @media (prefers-reduced-motion: reduce){
       *{ animation:none !important; transition:none !important; }
     }
@@ -864,20 +1030,49 @@
 
 <body>
   <div class="bg" aria-hidden="true">
-    <video autoplay muted loop playsinline preload="metadata"
+    <video id="bgVid" autoplay muted loop playsinline preload="metadata"
       src="https://cdn.coverr.co/videos/coverr-blurry-lights-9419/1080p.mp4"></video>
   </div>
   <div class="grain" aria-hidden="true"></div>
 
-  <!-- INTRO: solo cuore -->
+  <!-- INTRO -->
   <div class="intro" id="intro">
     <div class="introInner">
       <div class="introSmall">invito riservato</div>
       <div class="introTitle" id="introTitle">Per Silvia</div>
-      <button class="heartBtn" id="startBtn" type="button" aria-label="Apri invito">
-        <span>💗</span>
-      </button>
-      <div class="introHint">Tocca il cuore. Poi… vai avanti, una card alla volta.</div>
+
+      <div class="heartWrap">
+        <div class="underHeart" aria-hidden="true">
+          <svg viewBox="0 0 100 90">
+            <path d="M50 82 C38 72 18 60 18 38 C18 26 27 17 39 17 C45 17 50 20 50 20 C50 20 55 17 61 17 C73 17 82 26 82 38 C82 60 62 72 50 82 Z"
+              fill="rgba(46,229,157,.18)" stroke="rgba(46,229,157,.55)" stroke-width="2.2" />
+          </svg>
+        </div>
+
+        <button class="heartBtn" id="startBtn" type="button" aria-label="Apri invito">
+          <svg class="heartIcon" viewBox="0 0 24 24" aria-hidden="true">
+            <defs>
+              <linearGradient id="gHeart" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0" stop-color="var(--g1)" />
+                <stop offset="0.6" stop-color="var(--g2)" />
+                <stop offset="1" stop-color="var(--g3)" />
+              </linearGradient>
+            </defs>
+            <path fill="url(#gHeart)" d="M12 21s-6.7-4.35-9.2-8.3C.9 9.7 2.2 6.7 4.9 5.7c1.8-.7 3.8-.2 5.1 1.1L12 8.8l2-2c1.3-1.3 3.3-1.8 5.1-1.1 2.7 1 4 4 2.1 7-2.5 3.95-9.2 8.3-9.2 8.3z"/>
+          </svg>
+        </button>
+
+        <div class="introFx" aria-hidden="true">
+          <svg viewBox="0 0 100 90">
+            <path class="bigFill"
+              d="M50 82 C38 72 18 60 18 38 C18 26 27 17 39 17 C45 17 50 20 50 20 C50 20 55 17 61 17 C73 17 82 26 82 38 C82 60 62 72 50 82 Z" />
+            <path class="bigStroke"
+              d="M50 82 C38 72 18 60 18 38 C18 26 27 17 39 17 C45 17 50 20 50 20 C50 20 55 17 61 17 C73 17 82 26 82 38 C82 60 62 72 50 82 Z" />
+          </svg>
+        </div>
+      </div>
+
+      <div class="introHint">Tocca il cuore verde. Poi… vai avanti (o scorri) una card alla volta.</div>
     </div>
   </div>
 
@@ -894,11 +1089,11 @@
     </div>
   </header>
 
-  <main id="stage" aria-label="Invito a cards (clicca Vai avanti)">
+  <main id="stage" aria-label="Invito a cards (Vai avanti / scroll / swipe)">
     <div class="shell">
       <div class="progressBar" id="progress"></div>
 
-      <div class="panel cardsWrap">
+      <div class="panel cardsWrap" id="cardsWrap">
         <div class="cards" id="cards">
 
           <!-- CARD 1 -->
@@ -988,7 +1183,7 @@
             </div>
           </article>
 
-          <!-- CARD 8 (FINAL: PHOTO + QUESTION) -->
+          <!-- CARD 8 FINAL -->
           <article class="card finalCard" data-step="7">
             <div class="finalTop">
               <img id="photo" alt="Foto romantica"
@@ -1041,7 +1236,7 @@
       </div>
 
       <div class="controls">
-        <div class="miniHint" id="miniHint">Suggerimento: premi “Vai avanti” (oppure Invio).</div>
+        <div class="miniHint" id="miniHint">Suggerimento: “Vai avanti” oppure scorri (mouse / swipe).</div>
         <button class="nextBtn" id="nextBtn" type="button">
           Vai avanti
           <span class="arr">➜</span>
@@ -1050,7 +1245,7 @@
     </div>
   </main>
 
-  <!-- ===== Modal YES ===== -->
+  <!-- MODAL YES -->
   <div class="modal" id="modal" role="dialog" aria-modal="true" aria-label="Conferma invito">
     <div class="modalBox">
       <div class="modalInner">
@@ -1090,7 +1285,7 @@
     </div>
   </div>
 
-  <!-- ===== Credits overlay ===== -->
+  <!-- CREDITS -->
   <div class="credits" id="credits" aria-label="Titoli di coda">
     <div class="creditsTop">
       <div class="tag">Cinematic mode</div>
@@ -1163,7 +1358,6 @@
     $("#c1Title").textContent = `${toName},`;
     $("#finalTitle").textContent = `${toName}, vuoi essere la mia Valentina?`;
     $("#fromName").textContent = fromName;
-
     $("#creditsTo").textContent = toName;
     $("#creditsFrom").textContent = fromName;
 
@@ -1179,7 +1373,7 @@
       }catch(e){}
     }
 
-    // ===== Countdown target (Feb 14 20:30 CET)
+    // ===== Countdown target
     function nextTarget(){
       const now = new Date();
       const year = now.getFullYear();
@@ -1227,11 +1421,11 @@
     function spawnFloatHeart(){
       const h = document.createElement("div");
       h.className = "floatHeart";
-      h.textContent = Math.random() > 0.5 ? "❤️" : "💗";
+      h.textContent = Math.random() > 0.55 ? "❤️" : (Math.random() > 0.5 ? "💗" : "💖");
       h.style.left = (Math.random() * 100) + "vw";
       h.style.fontSize = (14 + Math.random() * 18) + "px";
       h.style.animationDuration = (4 + Math.random() * 4) + "s";
-      h.style.opacity = (0.22 + Math.random() * 0.40);
+      h.style.opacity = (0.20 + Math.random() * 0.38);
       document.body.appendChild(h);
       setTimeout(() => h.remove(), 8500);
     }
@@ -1242,7 +1436,7 @@
       const url = new URL(location.href);
       url.searchParams.set("to", toName);
       url.searchParams.set("from", fromName);
-      // dedica NON inclusa di default (intima). Se vuoi includerla, decommenta:
+      // dedica NON inclusa di default (intima). Se vuoi includerla:
       // url.searchParams.set("dedica", encodeURIComponent($("#dedicaText").textContent));
       try{
         await navigator.clipboard.writeText(url.toString());
@@ -1252,17 +1446,85 @@
       }
     });
 
-    // ===== Stepper logic (cards one-by-one)
+    // ===== Cinematic click sound (WebAudio)
+    let audioCtx = null;
+    let noiseBuf = null;
+
+    function ensureAudio(){
+      if (!audioCtx){
+        const AC = window.AudioContext || window.webkitAudioContext;
+        audioCtx = AC ? new AC() : null;
+      }
+      if (audioCtx && audioCtx.state === "suspended") audioCtx.resume().catch(()=>{});
+      if (audioCtx && !noiseBuf){
+        const dur = 0.12;
+        noiseBuf = audioCtx.createBuffer(1, Math.floor(audioCtx.sampleRate * dur), audioCtx.sampleRate);
+        const data = noiseBuf.getChannelData(0);
+        for (let i=0;i<data.length;i++){
+          const t = i / data.length;
+          data[i] = (Math.random()*2-1) * Math.pow(1 - t, 1.8);
+        }
+      }
+    }
+
+    function playClick(){
+      if (!audioCtx) return;
+      const t0 = audioCtx.currentTime;
+
+      const master = audioCtx.createGain();
+      master.gain.setValueAtTime(0.0001, t0);
+      master.gain.exponentialRampToValueAtTime(0.08, t0 + 0.010);
+      master.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.120);
+      master.connect(audioCtx.destination);
+
+      // noise burst (bandpass)
+      const n = audioCtx.createBufferSource();
+      n.buffer = noiseBuf;
+      const bp = audioCtx.createBiquadFilter();
+      bp.type = "bandpass";
+      bp.frequency.setValueAtTime(1200, t0);
+      bp.Q.setValueAtTime(0.9, t0);
+      n.connect(bp);
+      bp.connect(master);
+      n.start(t0);
+      n.stop(t0 + 0.12);
+
+      // soft thump
+      const osc = audioCtx.createOscillator();
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(180, t0);
+      const og = audioCtx.createGain();
+      og.gain.setValueAtTime(0.0001, t0);
+      og.gain.exponentialRampToValueAtTime(0.05, t0 + 0.008);
+      og.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.10);
+      osc.connect(og);
+      og.connect(master);
+      osc.start(t0);
+      osc.stop(t0 + 0.12);
+    }
+
+    function haptic(){
+      try{ navigator.vibrate && navigator.vibrate(8); }catch(e){}
+    }
+
+    // ===== Stepper
     const intro = $("#intro");
     const hdr = $("#hdr");
     const stage = $("#stage");
     const startBtn = $("#startBtn");
     const nextBtn = $("#nextBtn");
     const miniHint = $("#miniHint");
+    const cardsEl = $("#cards");
+    const bgVid = $("#bgVid");
+
+    const modal = $("#modal");
+    const credits = $("#credits");
 
     const cards = $$(".card");
     const steps = cards.length; // 8
     let cur = 0;
+    let started = false;
+    let starting = false;
 
     // progress dots
     const progress = $("#progress");
@@ -1273,69 +1535,174 @@
       progress.appendChild(d);
       dots.push(d);
     }
+
     function paintProgress(){
       dots.forEach((d,i)=> d.classList.toggle("on", i===cur));
+      // progress line glow on timeline
+      const denom = Math.max(1, (steps - 1));
+      const p = cur / denom;                 // 0..1
+      const pSoft = Math.max(0.06, p);       // un minimo visibile
+      cardsEl.style.setProperty("--prog", pSoft.toFixed(4));
     }
 
     function markConnectors(){
-      cards.forEach((c,i)=>{
-        c.classList.toggle("hasNext", i < steps-1);
-      });
+      cards.forEach((c,i)=> c.classList.toggle("hasNext", i < steps-1));
     }
     markConnectors();
+
+    function setActiveCard(){
+      cards.forEach((c,i)=> c.classList.toggle("active", i === cur));
+    }
+
+    function setDolly(on){
+      document.body.classList.toggle("dolly", !!on);
+    }
 
     function showStep(i){
       if (i < 0 || i >= steps) return;
       cards[i].classList.add("show");
       cur = i;
+      setActiveCard();
       paintProgress();
 
-      // last step: hide Next button
       const isLast = (cur === steps-1);
       nextBtn.style.opacity = isLast ? 0 : 1;
       nextBtn.style.pointerEvents = isLast ? "none" : "auto";
-      miniHint.textContent = isLast ? "È tutto qui. Ora… la risposta." : "Premi “Vai avanti” (o Invio).";
+      miniHint.textContent = isLast ? "È tutto qui. Ora… la risposta." : "Vai avanti (oppure scorri / swipe).";
 
-      // little micro-confetti on first reveal
+      // dolly quando appare l'ultima card
+      setDolly(isLast);
+
       if (i === 0){
         confetti({ particleCount: 120, spread: 110, origin: { y: 0.65 } });
+      }
+      if (isLast){
+        confetti({ particleCount: 90, spread: 80, origin: { y: 0.75 } });
       }
     }
 
     function next(){
       if (cur >= steps-1) return;
+      playClick();
+      haptic();
       showStep(cur+1);
     }
 
-    // Start
+    // Start sequence: animazione cuore + poi reveal
     function start(){
-      intro.classList.add("hide");
-      hdr.classList.add("on");
-      stage.classList.add("on");
+      if (starting || started) return;
+      starting = true;
 
-      // reveal first card only
-      cards.forEach(c => c.classList.remove("show"));
-      showStep(0);
+      ensureAudio();
+      playClick();
+
+      // prova a far partire video su iOS dopo gesto utente
+      try { bgVid && bgVid.play && bgVid.play().catch(()=>{}); } catch(e){}
+
+      intro.classList.add("play");
+
+      // micro confetti verde
+      try{
+        confetti({
+          particleCount: 80,
+          spread: 110,
+          startVelocity: 18,
+          origin: { y: 0.58 },
+          scalar: 1.05
+        });
+      }catch(e){}
+
+      setTimeout(() => {
+        intro.classList.add("hide");
+        hdr.classList.add("on");
+        stage.classList.add("on");
+        started = true;
+
+        cards.forEach(c => { c.classList.remove("show"); c.classList.remove("active"); });
+        cur = 0;
+        setDolly(false);
+        showStep(0);
+
+        starting = false;
+      }, 1200);
     }
 
     startBtn.addEventListener("click", start);
 
-    nextBtn.addEventListener("click", next);
+    // Button next
+    nextBtn.addEventListener("click", () => {
+      if (!started) return;
+      if (modal.classList.contains("show") || credits.classList.contains("show")) return;
+      next();
+    });
+
+    // ===== Scroll / Wheel (PC) -> next
+    let wheelLock = false;
+    window.addEventListener("wheel", (e) => {
+      if (!started) return;
+      if (modal.classList.contains("show") || credits.classList.contains("show")) return;
+      if (wheelLock) return;
+      if (Math.abs(e.deltaY) < 10) return;
+
+      // scendo => avanti
+      if (e.deltaY > 0){
+        wheelLock = true;
+        setTimeout(() => wheelLock = false, 420);
+        e.preventDefault();
+        next();
+      }
+    }, { passive: false });
+
+    // ===== Touch swipe (telefono) -> next
+    let tStartY = null;
+    let tStartX = null;
+    window.addEventListener("touchstart", (e) => {
+      if (!started) return;
+      if (modal.classList.contains("show") || credits.classList.contains("show")) return;
+      const t = e.touches && e.touches[0];
+      if (!t) return;
+      tStartY = t.clientY;
+      tStartX = t.clientX;
+    }, { passive: true });
+
+    window.addEventListener("touchend", (e) => {
+      if (!started) return;
+      if (modal.classList.contains("show") || credits.classList.contains("show")) return;
+      if (tStartY == null) return;
+
+      const t = e.changedTouches && e.changedTouches[0];
+      if (!t) return;
+
+      const dy = tStartY - t.clientY; // swipe up => positivo (scroll down)
+      const dx = Math.abs((tStartX ?? 0) - t.clientX);
+
+      tStartY = null; tStartX = null;
+
+      // evita swipe laterali
+      if (dx > 70) return;
+
+      if (dy > 42){
+        next();
+      }
+    }, { passive: true });
+
+    // ===== Keyboard
     window.addEventListener("keydown", (e) => {
-      if (!stage.classList.contains("on")) return;
+      if (!started) return;
+      if (modal.classList.contains("show") || credits.classList.contains("show")) return;
       if (e.key === "Enter" || e.key === "ArrowDown" || e.key === " "){
         e.preventDefault();
         next();
       }
     });
 
-    // ===== Final NO escapes (only final step)
+    // ===== Final NO escapes
     const noBtn = $("#noBtn");
     const yesBtn = $("#yesBtn");
     const actionsArea = $("#actionsArea");
 
     function moveNo(){
-      if (cur !== steps-1) return; // only on final card
+      if (cur !== steps-1) return;
       const c = actionsArea.getBoundingClientRect();
       const b = noBtn.getBoundingClientRect();
       const padding = 8;
@@ -1348,12 +1715,14 @@
 
       noBtn.style.left = Math.min(maxX, x) + "px";
       noBtn.style.top = Math.min(maxY, y) + "px";
+      playClick();
+      haptic();
     }
     noBtn.addEventListener("mouseenter", moveNo);
     noBtn.addEventListener("click", moveNo);
+    noBtn.addEventListener("touchstart", moveNo, { passive: true });
 
     // ===== YES modal + confetti
-    const modal = $("#modal");
     function heartConfetti(){
       const duration = 1200;
       const end = Date.now() + duration;
@@ -1370,17 +1739,20 @@
     }
 
     function openModal(){
+      ensureAudio();
+      playClick();
+      haptic();
       $("#modalTitle").textContent = `Che bella notizia, ${toName} 💞`;
       modal.classList.add("show");
       heartConfetti();
       showToast("Segnato: 20:30 ✨");
     }
-
     yesBtn.addEventListener("click", openModal);
+
     $("#closeBtn").addEventListener("click", () => modal.classList.remove("show"));
     modal.addEventListener("click", (e) => { if (e.target === modal) modal.classList.remove("show"); });
 
-    // ===== .ics calendar
+    // ===== .ics
     function ymd(t){
       const y = t.getFullYear();
       const m = String(t.getMonth()+1).padStart(2,"0");
@@ -1440,25 +1812,26 @@ Nota: alle 20:30 voglio vederti pronta ✨`;
       }
     });
 
-    // ===== Film credits
-    const credits = $("#credits");
+    // ===== Credits
     const creditsRoll = $("#creditsRoll");
-
     function restartCreditsAnimation(){
       creditsRoll.style.animation = "none";
       void creditsRoll.offsetHeight;
       creditsRoll.style.animation = "";
     }
-
     function openCredits(){
       modal.classList.remove("show");
       credits.classList.add("show");
       restartCreditsAnimation();
       confetti({ particleCount: 220, spread: 120, origin: { y: 0.70 } });
     }
-
     $("#creditsBtn").addEventListener("click", openCredits);
     $("#exitCreditsBtn").addEventListener("click", () => credits.classList.remove("show"));
+
+    // ===== Init progress line (prima di start)
+    paintProgress();
+    setActiveCard();
+
   })();
   </script>
 </body>
